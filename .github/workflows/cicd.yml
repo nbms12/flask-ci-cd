@@ -1,0 +1,57 @@
+name: CI/CD Pipeline
+on: [push]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python/Node
+        uses: actions/setup-python@v2  # For Python
+        # For Node.js, use: actions/setup-node@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt  # For Python
+          # npm install  # For Node.js
+
+      #- name: Run tests
+       # run: |
+          #python -m pytest  # If tests exist
+          # npm test  # For Node.js
+
+  docker-build:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/my-app:latest .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/my-app:latest
+
+  deploy-to-kubernetes:
+    needs: docker-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v1
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s-deployment.yaml
