@@ -45,8 +45,8 @@ jobs:
             #exit-code: '1'
       - name: Build and push Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/my-app:latest .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/my-app:latest
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/my-app:${{ github.run_number }} .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/my-app:${{ github.run_number }}
 
   deploy-to-kubernetes:
     needs: docker-build
